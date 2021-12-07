@@ -9,12 +9,10 @@ def triangle(n):
     return (n * (n + 1)) // 2
 
 
-@util.memoize
 def cost_linear(target, positions):
     return sum(abs(p - target) for p in positions)
 
 
-@util.memoize
 def cost_triangle(target, positions):
     return sum(triangle(abs(p - target)) for p in positions)
 
