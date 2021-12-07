@@ -36,6 +36,9 @@ def find_minimum_cost(positions, cost):
         if pmid == pmin or pmid == pmax:
            return min(cmin, cmax)
 
+        # Assuming the cost function is convex, halve the range by discarding
+        # whichever limiting value has the higher cost, taking the mid-point as
+        # the new limit on that side.
         if cmax < cmin:
             pmin = pmid
             cmin = cmid
