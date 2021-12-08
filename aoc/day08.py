@@ -19,19 +19,6 @@ from . import util
 #  .    f  e    f  .    f  e    f  .    f
 #   gggg    gggg    ....    gggg    gggg
 
-LENGTHS = {
-    "0": len("abcefg"),
-    "1": len("cf"),
-    "2": len("acdeg"),
-    "3": len("acdfg"),
-    "4": len("bcdf"),
-    "5": len("abdfg"),
-    "6": len("abdefg"),
-    "7": len("acf"),
-    "8": len("abcdefg"),
-    "9": len("abcdfg"),
-}
-
 
 def get_entries(lines):
     entries = []
@@ -46,72 +33,60 @@ def get_entries(lines):
 
 def count_uniques(entries):
     count = 0
-    uniqs = {
-        LENGTHS["1"],
-        LENGTHS["4"],
-        LENGTHS["7"],
-        LENGTHS["8"],
-    }
     for _, output in entries:
         for digit in output:
-            if len(digit) in uniqs:
+            if len(digit) in {2, 3, 4, 7}:
                 count += 1
     return count
-
-
-def find_with_length(length, patterns):
-    for p in patterns:
-        if len(p) == length:
-            return p
 
 
 def find_mapping(patterns):
     known = {}
 
     # First, map the numbers which use a unique number of segments.
-    for n in ["1", "4", "7", "8"]:
-        known[n] = find_with_length(LENGTHS[n], patterns)
+    for pattern in patterns:
+        length = len(pattern)
+        if length == 2:
+            known["1"] = pattern
+        elif length == 3:
+            known["7"] = pattern
+        elif length == 4:
+            known["4"] = pattern
+        elif length == 7:
+            known["8"] = pattern
 
     # Of the numbers which use 6 segments:
     # - only '9' is a strict superset of '4'
     # - only '6' isn't a strict superset of '1'
     # - '0' must be the one left over
-    unknown = {p for p in patterns if len(p) == 6}
-    for pattern in unknown:
-        if pattern > known["4"]:
-            known["9"] = pattern
-            unknown.discard(pattern)
-            break
-    for pattern in unknown:
-        if not pattern > known["1"]:
-            known["6"] = pattern
-            unknown.discard(pattern)
-            break
-    known["0"] = unknown.pop()
+    for pattern in patterns:
+        if len(pattern) == 6:
+            if pattern > known["4"]:
+                known["9"] = pattern
+            elif not pattern > known["1"]:
+                known["6"] = pattern
+            else:
+                known["0"] = pattern
 
     # Of the numbers which use 5 segments:
     # - only '3' is a strict superset of '1'
     # - only '5' is a strict subset of '6'
     # - '2' must be the one left over
-    unknown = {p for p in patterns if len(p) == 5}
-    for pattern in unknown:
-        if pattern > known["1"]:
-            known["3"] = pattern
-            unknown.discard(pattern)
-            break
-    for pattern in unknown:
-        if pattern < known["6"]:
-            known["5"] = pattern
-            unknown.discard(pattern)
-            break
-    known["2"] = unknown.pop()
+    for pattern in patterns:
+        if len(pattern) == 5:
+            if pattern > known["1"]:
+                known["3"] = pattern
+            elif pattern < known["6"]:
+                known["5"] = pattern
+            else:
+                known["2"] = pattern
 
-    # Return the inverse (i.e. segments:number) mapping.
+    # Return the inverse (i.e. pattern:number) mapping.
     return {v: k for k, v in known.items()}
 
 
 def decode_output(mapping, encoded):
-    return "".join(mapping[digit] for digit in encoded)
+    return int("".join(mapping[digit] for digit in encoded))
 
 
 def run():
@@ -120,9 +95,8 @@ def run():
 
     count = count_uniques(entries)
     total = 0
-    for i, (patterns, output) in enumerate(entries):
+    for patterns, output in entries:
         mapping = find_mapping(patterns)
-        decoded = decode_output(mapping, output)
-        total += int(decoded)
+        total += decode_output(mapping, output)
 
     return count, total
