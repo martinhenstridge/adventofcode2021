@@ -19,43 +19,47 @@ def is_small(cave):
     return cave.lower() == cave
 
 
-def find_routes1(connections):
-    routes = []
+def count_routes1(connections):
+    routes = 0
 
     partials = [["start"]]
     while partials:
         partial = partials.pop()
         for cave in connections[partial[-1]]:
+            if cave == "end":
+                routes += 1
+                continue
+
             if is_small(cave) and cave in partial:
                 continue
+
             extended = partial[:]
             extended.append(cave)
-            if cave == "end":
-                routes.append(extended)
-            else:
-                partials.append(extended)
+            partials.append(extended)
 
     return routes
 
 
-def find_routes2(connections):
-    routes = []
+def count_routes2(connections):
+    routes = 0
 
     partials = [(["start"], False)]
     while partials:
         partial, revisited = partials.pop()
         for cave in connections[partial[-1]]:
+            if cave == "end":
+                routes += 1
+                continue
+
             revisiting = revisited
             if is_small(cave) and cave in partial:
                 if revisited:
                     continue
                 revisiting = True
+
             extended = partial[:]
             extended.append(cave)
-            if cave == "end":
-                routes.append(extended)
-            else:
-                partials.append((extended, revisiting))
+            partials.append((extended, revisiting))
 
     return routes
 
@@ -64,7 +68,7 @@ def run():
     inputlines = util.get_input_lines("12.txt")
     connections = get_connections(inputlines)
 
-    routes1 = find_routes1(connections)
-    routes2 = find_routes2(connections)
+    count1 = count_routes1(connections)
+    count2 = count_routes2(connections)
 
-    return len(routes1), len(routes2)
+    return count1, count2
