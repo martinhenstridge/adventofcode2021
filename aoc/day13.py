@@ -2,6 +2,77 @@ import re
 from . import util
 
 
+LETTERS_TO_DOTS = {
+    "A": [
+              (1,0),(2,0),
+        (0,1),            (3,1),
+        (0,2),            (3,2),
+        (0,3),(1,3),(2,3),(3,3),
+        (0,4),            (3,4),
+        (0,5),            (3,5),
+    ],
+    "E": [
+        (0,0),(1,0),(2,0),(3,0),
+        (0,1),
+        (0,2),(1,2),(2,2),
+        (0,3),
+        (0,4),
+        (0,5),(1,5),(2,5),(3,5),
+    ],
+    "F": [
+        (0,0),(1,0),(2,0),(3,0),
+        (0,1),
+        (0,2),(1,2),(2,2),
+        (0,3),
+        (0,4),
+        (0,5),
+    ],
+    "G": [
+              (1,0),(2,0),
+        (0,1),            (3,1),
+        (0,2),
+        (0,3),      (2,3),(3,3),
+        (0,4),            (3,4),
+              (1,5),(2,5),(3,5),
+    ],
+    "H": [
+        (0,0),            (3,0),
+        (0,1),            (3,1),
+        (0,2),(1,2),(2,2),(3,2),
+        (0,3),            (3,3),
+        (0,4),            (3,4),
+        (0,5),            (3,5),
+    ],
+    "R": [
+        (0,0),(1,0),(2,0),
+        (0,1),            (3,1),
+        (0,2),            (3,2),
+        (0,3),(1,3),(2,3),
+        (0,4),      (2,4),
+        (0,5),            (3,5),
+    ],
+    "U": [
+        (0,0),            (3,0),
+        (0,1),            (3,1),
+        (0,2),            (3,2),
+        (0,3),            (3,3),
+        (0,4),            (3,4),
+              (1,5),(2,5),
+    ],
+    "Z": [
+        (0,0),(1,0),(2,0),(3,0),
+                          (3,1),
+                    (2,2),
+              (1,3),
+        (0,4),
+        (0,5),(1,5),(2,5),(3,5),
+    ],
+}
+
+DOTS_TO_LETTERS = {frozenset(v): k for k, v in LETTERS_TO_DOTS.items()}
+
+
+
 def get_dots_folds(lines):
     dots = set()
     folds = []
@@ -43,6 +114,14 @@ def foldy(axis, dots):
     return result
 
 
+def parse_code(dots):
+    letters = [set() for _ in range(8)]
+    for x, y in dots:
+        div, mod = divmod(x, 5)
+        letters[div].add((mod, y))
+    return "".join(DOTS_TO_LETTERS[frozenset(letter)] for letter in letters)
+
+
 def run():
     inputlines = util.get_input_lines("13.txt")
     dots, folds = get_dots_folds(inputlines)
@@ -53,16 +132,6 @@ def run():
 
     for fold, coord in folds[1:]:
         dots = fold(coord, dots)
+    dots2 = dots
 
-    #xmax = max(dots, key=lambda d: d[0])[0]
-    #ymax = max(dots, key=lambda d: d[1])[1]
-
-    #for y in range(ymax + 1):
-    #    for x in range(xmax + 1):
-    #        if (x, y) in dots:
-    #            print(" #", end="")
-    #        else:
-    #            print(" .", end="")
-    #    print()
-
-    return len(dots1), "FAGURZHE"
+    return len(dots1), parse_code(dots2)
