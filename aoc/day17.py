@@ -44,12 +44,14 @@ def find_steps_within_targety(targety, vy):
         step = 1 + 2 * vy
         v = -(vy + 1)
 
+    steps = []
     while y >= targety[0]:
         if y <= targety[1]:
-            yield step
+            steps.append(step)
         y += v
         v -= 1
         step += 1
+    return steps
 
 
 def run():
@@ -64,12 +66,14 @@ def run():
 
     peak = find_peak(vy_max)
 
-    hits = set()
+    count = 0
     for vy in range(vy_min, vy_max + 1):
-        for step in find_steps_within_targety(targety, vy):
+        if steps := find_steps_within_targety(targety, vy):
             for vx in range(vx_min, vx_max + 1):
-                x = find_x_at_step(step, vx)
-                if targetx[0] <= x <= targetx[1]:
-                    hits.add((vx, vy))
+                for step in steps:
+                    x = find_x_at_step(step, vx)
+                    if targetx[0] <= x <= targetx[1]:
+                        count += 1
+                        break
 
-    return peak, len(hits)
+    return peak, count
