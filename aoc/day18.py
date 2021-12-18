@@ -42,7 +42,7 @@ class Pair:
         result.lchild.parent = result
         result.rchild.parent = result
         while True:
-            reduced = result.reduce_first()
+            reduced = result.reduce()
             if reduced:
                 return result
 
@@ -76,16 +76,25 @@ class Pair:
         else:
             yield from self.rchild.walk_regulars()
 
-    def reduce_first(self):
+    def reduce(self):
+        reduced = True
+
+        # Explode every pair that needs exploding in a single pass. This is safe
+        # because the operation only reduces nesting, so can never trigger more
+        # explosions. All explosions are also always handled before splits.
         for depth, pair in self.walk_pairs():
             if depth == 4:
                 pair.explode()
-                return False
+                reduced = False
+
+        # Splitting increases nesting and so can trigger an explosion, so we
+        # need to break out as soon as we've performed a split.
         for regular in self.walk_regulars():
             if regular.value >= 10:
                 regular.split()
                 return False
-        return True
+
+        return reduced
 
     def find_left_regular(self):
         node = self
