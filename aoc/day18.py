@@ -159,12 +159,7 @@ class Pair:
 
 
 def get_numbers(lines):
-    numbers = []
-    for line in lines:
-        if line:
-            number = Pair.from_string(line)
-            numbers.append(number)
-    return numbers
+    return [Pair.from_string(line) for line in lines if line]
 
 
 def run():
