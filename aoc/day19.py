@@ -80,39 +80,49 @@ def check_for_overlap(references, beacons):
     return False, None
 
 
-def find_overlapping(knowns, unknowns):
-    for known in knowns:
-        for scanner, beacons in unknowns.items():
+def find_overlapping(solved, unsolved, fails):
+    for unsolved_scanner, unsolved_beacons in unsolved.items():
+        for solved_scanner, solved_beacons in solved.items():
+            # Skip this combination of scanners if it has already been checked.
+            combination = (unsolved_scanner, solved_scanner)
+            if combination in fails:
+                continue
+
+            # Check each possible orientation of the unsolved scanner against
+            # the data from the solved scanner.
             for transform in TRANSFORMS:
-                transformed = [transform(beacon) for beacon in beacons]
-                overlapping, offset = check_for_overlap(known, transformed)
+                transformed = [transform(b) for b in unsolved_beacons]
+                overlapping, offset = check_for_overlap(solved_beacons, transformed)
                 if overlapping:
-                    return scanner, offset, [
-                        offset_position(beacon, offset)
-                        for beacon in transformed
-                    ]
+                    corrected = [offset_position(b, offset) for b in transformed]
+                    return unsolved_scanner, offset, corrected
+
+            # The current combination of scanners definitely doesn't overlap, in
+            # any orientation, store this to allow skipping in future.
+            fails.add(combination)
 
 
 def run():
     inputlines = util.get_input_lines("19.txt")
-    unknowns = {
+    unsolved = {
         scanner: beacons
         for scanner, beacons
         in get_beacon_positions(inputlines)
     }
 
-    knowns = [unknowns.pop(0)]
+    solved = {0: unsolved.pop(0)}
     scanners = {0: (0, 0, 0)}
+    fails = set()
 
-    while unknowns:
-        scanner, offset, corrected = find_overlapping(knowns, unknowns)
-        knowns.insert(0, corrected)
+    while unsolved:
+        scanner, offset, corrected = find_overlapping(solved, unsolved, fails)
+        solved[scanner] = corrected
         scanners[scanner] = offset
-        del unknowns[scanner]
+        del unsolved[scanner]
 
     beacons = set()
-    for known in knowns:
-        for beacon in known:
+    for solved in solved.values():
+        for beacon in solved:
             beacons.add(beacon)
     count = len(beacons)
 
