@@ -3,7 +3,7 @@ from . import util
 
 
 def get_starting_positions(lines):
-    return [int(line[-1]) for line in lines]
+    return [int(line[-1]) for line in lines if line]
 
 
 def roll3_deterministic():
