@@ -12,7 +12,7 @@ class Cuboid(NamedTuple):
     zmax: int
 
     @property
-    def cubes(self):
+    def count(self):
         return (
             (1 + self.xmax - self.xmin)
             * (1 + self.ymax - self.ymin)
@@ -34,22 +34,36 @@ class Cuboid(NamedTuple):
             return False
         return True
 
-    def split(self, other):
-        hitting = {other}
-        missing = set()
+    def overlaps(self, other):
+        if self.xmin > other.xmax:
+             return False
+        if self.xmax < other.xmin:
+            return False
+        if self.ymin > other.ymax:
+            return False
+        if self.ymax < other.ymin:
+            return False
+        if self.zmin > other.zmax:
+            return False
+        if self.zmax < other.zmin:
+            return False
+        return True
 
+    def split(self, other):
+        """Split `other` into cuboids not overlapping `self`"""
+        missing = set()
+        hitting = {other}
         for imin, imax in [(0, 1), (2, 3), (4, 5)]:
             candidates = hitting.copy()
             hitting = set()
             for candidate in candidates:
-                _hitting, _missing = self._split_along_axis(candidate, imin, imax)
+                _hitting, _missing = self._split_axis(candidate, imin, imax)
                 hitting.update(_hitting)
                 missing.update(_missing)
+        return missing
 
-        return hitting, missing
-
-    def _split_along_axis(self, other, imin, imax):
-        """Split `other` along axis of `self`"""
+    def _split_axis(self, other, imin, imax):
+        """Split `other` along a single axis of `self`"""
         if self[imin] > other[imax]:
             # missing entirely on right side
             return [], [other]
@@ -108,15 +122,20 @@ def get_reboot_steps(lines):
 
 def reboot(steps):
     cuboids = set()
-    for turnon, new in steps:
+
+    for turnon, cuboid in steps:
         updated = set()
-        for old in cuboids:
-            hitting, missing = new.split(old)
-            updated.update(missing)
+        for existing in cuboids:
+            if not cuboid.overlaps(existing):
+                updated.add(existing)
+            else:
+                for new in cuboid.split(existing):
+                    updated.add(new)
         if turnon:
-            updated.add(new)
+            updated.add(cuboid)
         cuboids = updated
-    return sum(c.cubes for c in cuboids)
+
+    return sum(c.count for c in cuboids)
 
 
 def run():
